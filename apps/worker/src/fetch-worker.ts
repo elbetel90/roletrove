@@ -39,6 +39,12 @@ function extractSourceIds(rawJobs: unknown[], atsType: string): string[] {
 
 // ─── Fetch worker ─────────────────────────────────────────────────────────────
 
+// How long BullMQ holds the job lock before considering it stalled.
+// Large SR companies can have 500+ jobs at 1 req/s → many minutes of work.
+// We extend the lock proactively every LOCK_RENEW_MS so it never expires.
+const LOCK_DURATION_MS = 60_000       // 1-minute lock window
+const LOCK_RENEW_MS    = 20_000       // renew every 20 s (well before expiry)
+
 export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData> {
   const worker = new Worker<PollJobData>(
     QUEUE_COMPANY_POLL,
@@ -50,6 +56,11 @@ export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData>
         ats_token,
         poll_interval_hours,
       } = job.data
+
+      // Keep the lock alive for long-running fetches (e.g. SR with 500+ roles)
+      const lockExtender = setInterval(() => {
+        job.extendLock(LOCK_DURATION_MS).catch(() => {})
+      }, LOCK_RENEW_MS)
 
       const startedAt = new Date()
       const timerEnd = crawlDuration.startTimer({ ats_type, company_slug })
@@ -93,6 +104,8 @@ export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData>
             logger.warn({ ats_type }, 'Unknown ATS type — skipping fetch')
         }
       } catch (err) {
+        clearInterval(lockExtender)
+
         const errType =
           err instanceof AtsHttpError
             ? `http_${err.status}`
@@ -147,6 +160,7 @@ export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData>
         }
       }
 
+      clearInterval(lockExtender)
       timerEnd()
       queueProcessed.inc({ queue_name: QUEUE_COMPANY_POLL, status: 'completed' })
 
@@ -169,7 +183,8 @@ export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData>
     },
     {
       connection: bullConnection,
-      concurrency: 5, // up to 5 companies polled simultaneously
+      concurrency: 5,
+      lockDuration: LOCK_DURATION_MS,
     },
   )
 
