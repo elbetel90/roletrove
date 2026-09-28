@@ -40,5 +40,8 @@ Thumbs.db
 # Playwright MCP snapshots
 .playwright-mcp/
 
+# Notes
+missing.md
+
 # Test coverage
 coverage/
