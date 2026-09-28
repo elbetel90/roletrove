@@ -1,0 +1,71 @@
+name: roletrove
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: roletrove
+      POSTGRES_USER: roletrove
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roletrove"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  typesense:
+    image: typesense/typesense:27.0
+    environment:
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-devtskey}
+      TYPESENSE_DATA_DIR: /data
+      TYPESENSE_ENABLE_CORS: "true"
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8108/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  sequin:
+    image: sequin/sequin:latest
+    environment:
+      PG_URL: postgresql://roletrove:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/roletrove
+      SECRET_KEY_BASE: devsequinsecretkey64charslongXXdevsequinsecretkey64charslong1234
+      MQ_ENABLED: "false"
+    ports:
+      - "7376:7376"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    external: true
+    name: roletrove_postgres_data
+  redis_data:
+    external: true
+    name: roletrove_redis_data
+  typesense_data:
+    external: true
+    name: roletrove_typesense_data

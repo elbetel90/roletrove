@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 260px;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  a {
+    @apply text-inherit;
+  }
+}
+
+@layer components {
+  .prose-job {
+    @apply text-sm text-gray-700 leading-relaxed;
+  }
+
+  .prose-job h1,
+  .prose-job h2,
+  .prose-job h3 {
+    @apply font-semibold text-gray-900 mt-4 mb-2;
+  }
+
+  .prose-job ul,
+  .prose-job ol {
+    @apply ml-4 space-y-1 list-disc;
+  }
+
+  .prose-job p {
+    @apply mb-3;
+  }
+}

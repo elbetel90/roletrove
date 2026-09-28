@@ -1,0 +1,8 @@
+export { tsClient } from './client'
+export { JOBS_COLLECTION, JOBS_SCHEMA } from './schema'
+export type { JobDocument } from './schema'
+export { ensureCollection, recreateCollection } from './collections'
+export { indexJob, deleteJob, bulkIndexJobs, buildJobDocument } from './indexer'
+export type { ImportResult } from './indexer'
+export { searchJobs } from './search'
+export type { JobSearchParams, JobSearchResult, FacetCount } from './search'

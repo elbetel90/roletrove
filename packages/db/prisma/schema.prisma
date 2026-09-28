@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum AtsType {
+  greenhouse
+  ashby
+  lever
+  workable
+  smartrecruiters
+  workday
+  icims
+  successfactors
+  taleo
+  unknown
+}
+
+enum CompanyStatus {
+  active
+  inactive
+  dead
+  blocked
+}
+
+enum JobStatus {
+  discovered
+  active
+  updated
+  closed
+  archived
+}
+
+enum LocationType {
+  remote
+  hybrid
+  onsite
+  unknown
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  contract
+  internship
+  unknown
+}
+
+// ─── Company ─────────────────────────────────────────────────────────────────
+
+model Company {
+  id                  String        @id @default(uuid())
+  slug                String        @unique
+  name                String
+  domain              String?
+  ats_type            AtsType
+  ats_token           String
+  poll_interval_hours Int           @default(4)
+  next_poll_at        DateTime      @default(now())
+  status              CompanyStatus @default(active)
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  jobs       Job[]
+  crawl_logs CrawlLog[]
+
+  @@index([next_poll_at, status])
+}
+
+// ─── Job ─────────────────────────────────────────────────────────────────────
+
+model Job {
+  id               String         @id @default(uuid())
+  source_id        String
+  source_ats       AtsType
+  company_id       String
+  company          Company        @relation(fields: [company_id], references: [id])
+
+  title            String
+  title_normalized String
+  seniority        String?
+  role_family      String?
+
+  description_text String?        @db.Text
+  description_html String?        @db.Text
+  r2_key           String?
+
+  location_raw     String?
+  location_type    LocationType   @default(unknown)
+  location_country String?
+  location_region  String?
+
+  employment_type  EmploymentType @default(unknown)
+  department       String?
+  team             String?
+
+  tech_stack       String[]
+  tags             String[]
+
+  comp_min         Int?
+  comp_max         Int?
+  comp_currency    String?
+  has_equity       Boolean        @default(false)
+
+  apply_url        String
+  source_url       String
+
+  exact_hash       String         @unique
+  role_family_hash String
+
+  status           JobStatus      @default(active)
+  first_seen_at    DateTime       @default(now())
+  last_seen_at     DateTime       @default(now())
+  source_created_at DateTime?
+  source_updated_at DateTime?
+  closed_at        DateTime?
+
+  snapshots JobSnapshot[]
+  alerts    JobAlert[]
+
+  @@unique([source_id, source_ats, company_id])
+  @@index([company_id, status])
+  @@index([role_family_hash])
+  @@index([status, first_seen_at])
+  @@index([source_ats, status])
+}
+
+// ─── JobSnapshot ─────────────────────────────────────────────────────────────
+
+model JobSnapshot {
+  id          String   @id @default(uuid())
+  job_id      String
+  job         Job      @relation(fields: [job_id], references: [id])
+  raw_payload Json
+  diff_keys   String[]
+  created_at  DateTime @default(now())
+
+  @@index([job_id])
+}
+
+// ─── CrawlLog ────────────────────────────────────────────────────────────────
+
+model CrawlLog {
+  id           String    @id @default(uuid())
+  company_id   String
+  company      Company   @relation(fields: [company_id], references: [id])
+  ats_type     AtsType
+  started_at   DateTime
+  completed_at DateTime?
+  duration_ms  Int?
+  jobs_found   Int       @default(0)
+  jobs_new     Int       @default(0)
+  jobs_updated Int       @default(0)
+  jobs_closed  Int       @default(0)
+  error        String?
+  created_at   DateTime  @default(now())
+
+  @@index([company_id, started_at])
+}
+
+// ─── Auth (Better Auth managed) ──────────────────────────────────────────────
+
+model User {
+  id            String  @id
+  name          String
+  email         String  @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+
+  sessions       Session[]
+  accounts       Account[]
+  saved_searches SavedSearch[]
+  api_keys       ApiKey[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+
+// ─── Saved Searches & Alerts ─────────────────────────────────────────────────
+
+model SavedSearch {
+  id               String   @id @default(uuid())
+  user_id          String
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name             String
+  filters          Json
+  min_match_score  Int      @default(0)
+  notify_email     Boolean  @default(true)
+  notify_frequency String   @default("daily")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  alerts JobAlert[]
+}
+
+model JobAlert {
+  id              String      @id @default(uuid())
+  job_id          String
+  job             Job         @relation(fields: [job_id], references: [id])
+  saved_search_id String
+  saved_search    SavedSearch @relation(fields: [saved_search_id], references: [id], onDelete: Cascade)
+  match_score     Int?
+  notified_at     DateTime?
+  created_at      DateTime    @default(now())
+
+  @@unique([job_id, saved_search_id])
+}
+
+// ─── B2B API Keys ─────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id             String    @id @default(uuid())
+  user_id        String
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name           String
+  key_hash       String    @unique
+  last_used_at   DateTime?
+  requests_count Int       @default(0)
+  created_at     DateTime  @default(now())
+  revoked_at     DateTime?
+}
