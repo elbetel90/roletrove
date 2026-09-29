@@ -3,7 +3,7 @@ export { USER_AGENT, AtsHttpError, AtsParseError } from './errors'
 export { fetchGreenhouseJobs } from './greenhouse'
 export { fetchAshbyJobs } from './ashby'
 export { fetchLeverJobs } from './lever'
-export { fetchWorkableJobs } from './workable'
+export { fetchWorkableJobs, fetchWorkableJobDetail } from './workable'
 export { fetchSmartRecruitersJobs } from './smartrecruiters'
 
 export { parseCompensation, parseLeverSalaryRange } from './compensation'

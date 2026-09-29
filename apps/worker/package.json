@@ -20,7 +20,8 @@
     "@roletrove/db": "workspace:*",
     "@roletrove/shared": "workspace:*",
     "@roletrove/ats-adapters": "workspace:*",
-    "@roletrove/search": "workspace:*"
+    "@roletrove/search": "workspace:*",
+    "resend": "^4.0.1"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

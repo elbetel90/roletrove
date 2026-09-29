@@ -59,7 +59,7 @@ export function createFetchWorker(rateLimiter: RateLimiter): Worker<PollJobData>
 
       // Keep the lock alive for long-running fetches (e.g. SR with 500+ roles)
       const lockExtender = setInterval(() => {
-        job.extendLock(LOCK_DURATION_MS).catch(() => {})
+        job.extendLock(job.token!, LOCK_DURATION_MS).catch(() => {})
       }, LOCK_RENEW_MS)
 
       const startedAt = new Date()

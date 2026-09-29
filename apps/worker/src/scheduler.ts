@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import { prisma } from '@roletrove/db'
 import { enqueueCompanyPoll, companyPollQueue } from './queues'
 import { archiveOldClosedJobs } from './state-machine'
+import { runAlertCheck } from './alert-worker'
 import { queueDepth } from './metrics'
 import { logger } from './logger'
 
@@ -9,6 +10,8 @@ import { logger } from './logger'
 
 let pollTask: cron.ScheduledTask | null = null
 let archiveTask: cron.ScheduledTask | null = null
+let alertDailyTask: cron.ScheduledTask | null = null
+let alertInstantTask: cron.ScheduledTask | null = null
 
 /**
  * Start the scheduler.
@@ -38,12 +41,32 @@ export function startScheduler(): void {
     }
   })
 
-  logger.info('Scheduler started (poll: every 1min, archive: daily 03:00 UTC)')
+  // ── Daily at 08:00 UTC: send job alert digests (daily frequency) ─────────────
+  alertDailyTask = cron.schedule('0 8 * * *', async () => {
+    try {
+      await runAlertCheck('daily')
+    } catch (err) {
+      logger.error({ err }, 'Scheduler: error in daily alert task')
+    }
+  })
+
+  // ── Every hour: send instant job alerts ──────────────────────────────────────
+  alertInstantTask = cron.schedule('0 * * * *', async () => {
+    try {
+      await runAlertCheck('instant')
+    } catch (err) {
+      logger.error({ err }, 'Scheduler: error in instant alert task')
+    }
+  })
+
+  logger.info('Scheduler started (poll: every 1min, archive: daily 03:00 UTC, alerts: daily 08:00 UTC + hourly)')
 }
 
 export function stopScheduler(): void {
   pollTask?.stop()
   archiveTask?.stop()
+  alertDailyTask?.stop()
+  alertInstantTask?.stop()
   logger.info('Scheduler stopped')
 }
 

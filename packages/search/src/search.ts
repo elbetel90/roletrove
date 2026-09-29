@@ -30,6 +30,8 @@ export interface JobSearchParams {
   limit?: number
   /** Sort: newest | oldest | updated */
   sort?: 'newest' | 'oldest' | 'updated'
+  /** Only return jobs first seen after this Unix epoch ms timestamp */
+  first_seen_after_ms?: number
 }
 
 export interface FacetCount {
@@ -90,6 +92,9 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResu
   }
   if (params.has_comp === true) {
     filters.push('comp_min:>0')
+  }
+  if (params.first_seen_after_ms) {
+    filters.push(`first_seen_at:>${params.first_seen_after_ms}`)
   }
 
   // ── Sort ────────────────────────────────────────────────────────────────────

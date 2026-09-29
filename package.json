@@ -9,7 +9,9 @@
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push",
     "db:seed": "turbo db:seed",
-    "db:migrate": "turbo db:migrate"
+    "db:migrate": "turbo db:migrate",
+    "backfill:workable": "tsx --env-file=.env scripts/backfill-workable-descriptions.ts",
+    "reparse:salary": "tsx --env-file=.env scripts/reparse-salary.ts"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

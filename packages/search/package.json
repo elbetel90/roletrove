@@ -7,6 +7,10 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "reindex": "tsx --env-file=../../.env scripts/reindex.ts",
+    "init-typesense": "tsx --env-file=../../.env scripts/init-typesense.ts"
+  },
   "dependencies": {
     "typesense": "^1.8.2",
     "@roletrove/db": "workspace:*",

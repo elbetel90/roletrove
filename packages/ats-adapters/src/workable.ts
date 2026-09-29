@@ -15,10 +15,10 @@ interface WorkableOptions {
  * Fetch full Workable job detail including description HTML.
  * Returns null on any error so the caller falls back to list-only data.
  *
- * @param token    - Workable account slug
+ * @param token     - Workable account slug
  * @param shortcode - Unique job shortcode from the list response
  */
-async function fetchWorkableJobDetail(
+export async function fetchWorkableJobDetail(
   token: string,
   shortcode: string,
 ): Promise<WorkableJobDetail | null> {
