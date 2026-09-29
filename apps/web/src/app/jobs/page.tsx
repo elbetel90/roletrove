@@ -6,6 +6,7 @@ import { JobCard } from '@/components/jobs/job-card'
 import { Pagination } from '@/components/ui/pagination'
 import { Spinner } from '@/components/ui/spinner'
 import { SortTabs } from '@/components/jobs/sort-tabs'
+import { SaveSearchButton } from '@/components/auth/save-search-button'
 import { searchJobs } from '@roletrove/search'
 import type { JobSearchParams } from '@roletrove/search'
 
@@ -60,16 +61,27 @@ export default async function JobsPage({ searchParams: sp }: PageProps) {
     <div>
       {/* Page header + search */}
       <div className="mb-6 space-y-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Browse Jobs</h1>
-          {result && (
-            <p className="text-sm text-gray-500">
-              {result.found.toLocaleString()} results
-              {result.search_time_ms > 0 && (
-                <span className="text-gray-300 ml-1">· {result.search_time_ms}ms</span>
-              )}
-            </p>
-          )}
+          <div className="flex items-center gap-3">
+            {result && (
+              <p className="text-sm text-gray-500">
+                {result.found.toLocaleString()} results
+                {result.search_time_ms > 0 && (
+                  <span className="text-gray-300 ml-1">· {result.search_time_ms}ms</span>
+                )}
+              </p>
+            )}
+            <SaveSearchButton filters={{
+              q:             params.q,
+              seniority:     params.seniority,
+              role_family:   params.role_family,
+              location_type: params.location_type,
+              tech_stack:    params.tech_stack,
+              company_slug:  params.company_slug,
+              source_ats:    params.source_ats,
+            }} />
+          </div>
         </div>
 
         <Suspense fallback={<div className="h-11 bg-gray-100 rounded-xl animate-pulse" />}>

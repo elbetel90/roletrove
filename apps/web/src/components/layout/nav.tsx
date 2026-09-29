@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Briefcase, Building2, LayoutDashboard, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { UserMenu } from '@/components/auth/user-menu'
 
 const LINKS = [
   { href: '/',          label: 'Dashboard', icon: LayoutDashboard },
@@ -48,8 +49,11 @@ export function Nav() {
             })}
           </nav>
 
-          <div className="ml-auto text-xs text-gray-400 hidden sm:block">
-            Greenhouse · Ashby · Lever
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-xs text-gray-300 hidden sm:block">
+              Greenhouse · Ashby · Lever
+            </span>
+            <UserMenu />
           </div>
         </div>
       </div>
