@@ -89,7 +89,7 @@ export function SaveSearchButton({ filters }: Props) {
 
             {!hasFilters && (
               <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg mb-3">
-                No filters active — you'll be alerted for all new jobs.
+                No filters active — you&apos;ll be alerted for all new jobs.
               </p>
             )}
 
@@ -114,7 +114,7 @@ export function SaveSearchButton({ filters }: Props) {
               )}
 
               <p className="text-xs text-gray-400">
-                You'll receive daily email alerts for new matching jobs.
+                You&apos;ll receive daily email alerts for new matching jobs.
               </p>
 
               <Button type="submit" size="sm" className="w-full" disabled={loading}>
