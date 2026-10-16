@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an enhancement or a new ATS adapter
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - ATS adapter
+        - Search / API
+        - Web UI
+        - Worker / scheduler
+        - Docs / DX
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or painful today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What would you like RoleTrove to do instead?
+    validations:
+      required: true

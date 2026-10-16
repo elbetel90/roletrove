@@ -1,0 +1,35 @@
+name: Bug report
+description: Something is not working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Steps, commands, or URLs that trigger the issue.
+    validations:
+      required: true
+  - type: input
+    id: ats
+    attributes:
+      label: ATS platform
+      description: Greenhouse, Ashby, Lever, Workable, SmartRecruiters, or n/a
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node, pnpm, OS, and whether you used the documented Docker setup.
+      placeholder: "Node 20, pnpm 9, Docker Compose, Ubuntu"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant worker, web, or Docker logs. Redact secrets.
+      render: shell
