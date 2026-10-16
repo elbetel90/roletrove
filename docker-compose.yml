@@ -50,7 +50,7 @@ services:
     image: sequin/sequin:latest
     environment:
       PG_URL: postgresql://roletrove:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/roletrove
-      SECRET_KEY_BASE: devsequinsecretkey64charslongXXdevsequinsecretkey64charslong1234
+      SECRET_KEY_BASE: ${SEQUIN_SECRET_KEY:-devsequinsecretkey64charslongdevsequinsecretkey64chars12345678}
       MQ_ENABLED: "false"
     ports:
       - "7376:7376"
@@ -61,11 +61,8 @@ services:
 
 volumes:
   postgres_data:
-    external: true
     name: roletrove_postgres_data
   redis_data:
-    external: true
     name: roletrove_redis_data
   typesense_data:
-    external: true
     name: roletrove_typesense_data
