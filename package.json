@@ -11,6 +11,7 @@
     "db:push": "turbo db:push",
     "db:seed": "turbo db:seed",
     "db:migrate": "turbo db:migrate",
+    "db:migrate:deploy": "turbo db:migrate:deploy",
     "backfill:workable": "tsx --env-file=.env scripts/backfill-workable-descriptions.ts",
     "reparse:salary": "tsx --env-file=.env scripts/reparse-salary.ts"
   },

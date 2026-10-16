@@ -79,30 +79,26 @@ Edit `.env` with your values. The required fields for local development are:
 
 `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` default to `http://localhost:3000` if unset. Everything else (OAuth, R2, Resend, Grafana, OpenAI) is optional and can be left empty to start.
 
-Set `ADMIN_EMAILS` to a comma-separated list of accounts that should have admin access.
-
 ### 3. start infrastructure
-
-Compose uses pre-created Docker volumes. Create them once:
-
-```bash
-docker volume create roletrove_postgres_data
-docker volume create roletrove_redis_data
-docker volume create roletrove_typesense_data
-```
-
-Then start PostgreSQL, Redis, Typesense, and Sequin:
 
 ```bash
 docker compose up -d
 ```
 
+This starts PostgreSQL, Redis, Typesense, and Sequin. Compose creates named volumes on first run.
+
 ### 4. set up the database
 
 ```bash
 pnpm db:generate
-pnpm db:push
+pnpm db:migrate:deploy
 pnpm db:seed        # optional — upserts the built-in company list
+```
+
+If this database was created earlier with `db:push`, mark the initial migration as already applied instead of re-running it:
+
+```bash
+pnpm --filter @roletrove/db exec prisma migrate resolve --applied 0_init
 ```
 
 Seed inserts companies (who to crawl), not job postings. Jobs are fetched from each company's public ATS API when the worker runs.
@@ -145,6 +141,10 @@ Insert `hash` into `ApiKey.key_hash` with a valid `user_id`, then send `key` as 
 ## responsible use
 
 Default seed data points at ~90 real public career boards. The worker will call those ATS APIs once it starts. Keep the default poll interval, do not run `scripts/discover-companies.ts` unless you intend to probe many company slugs, and review each ATS provider's terms before crawling at scale.
+
+## contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Please read the [code of conduct](./CODE_OF_CONDUCT.md) and [security policy](./SECURITY.md).
 
 ## license
 
