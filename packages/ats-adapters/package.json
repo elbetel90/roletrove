@@ -13,6 +13,9 @@
     "he": "^1.2.0",
     "undici": "^6.21.1"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/node": "^20.17.6",
     "tsx": "^4.19.2",
