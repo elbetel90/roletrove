@@ -4,11 +4,11 @@ A self-hosted job aggregation engine that crawls company career pages across mul
 
 ## what it does
 
-- polls company career pages on a configurable schedule (default: every minute per-company cadence)
+- polls due companies every minute; each company has its own cadence (`poll_interval_hours`, default **4**)
 - normalises raw job postings into a unified schema (title, seniority, tech stack, location, compensation)
 - indexes jobs into Typesense for fast full-text and faceted search
 - archives closed jobs daily and stores raw HTML snapshots to Cloudflare R2
-- exposes a Next.js web UI and a public REST API (`/api/v1`)
+- exposes a Next.js web UI and a REST API (`/api/v1`)
 
 ## supported ats platforms
 
@@ -25,7 +25,7 @@ A self-hosted job aggregation engine that crawls company career pages across mul
 | layer | technology |
 |---|---|
 | monorepo | Turborepo + pnpm workspaces |
-| web | Next.js 15, Tailwind CSS |
+| web | Next.js 14, Tailwind CSS |
 | worker | Node.js, BullMQ, node-cron |
 | database | PostgreSQL 16 + Prisma ORM |
 | search | Typesense 27 |
@@ -77,23 +77,35 @@ Edit `.env` with your values. The required fields for local development are:
 - `TYPESENSE_API_KEY`
 - `BETTER_AUTH_SECRET`
 
-Everything else (OAuth, R2, Resend, Grafana, OpenAI) is optional and can be left empty to start.
+`NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` default to `http://localhost:3000` if unset. Everything else (OAuth, R2, Resend, Grafana, OpenAI) is optional and can be left empty to start.
+
+Set `ADMIN_EMAILS` to a comma-separated list of accounts that should have admin access.
 
 ### 3. start infrastructure
+
+Compose uses pre-created Docker volumes. Create them once:
+
+```bash
+docker volume create roletrove_postgres_data
+docker volume create roletrove_redis_data
+docker volume create roletrove_typesense_data
+```
+
+Then start PostgreSQL, Redis, Typesense, and Sequin:
 
 ```bash
 docker compose up -d
 ```
-
-This starts PostgreSQL, Redis, Typesense, and Sequin.
 
 ### 4. set up the database
 
 ```bash
 pnpm db:generate
 pnpm db:push
-pnpm db:seed        # optional — seeds company list from jobs.json
+pnpm db:seed        # optional — upserts the built-in company list
 ```
+
+Seed inserts companies (who to crawl), not job postings. Jobs are fetched from each company's public ATS API when the worker runs.
 
 ### 5. init typesense
 
@@ -108,20 +120,32 @@ pnpm dev
 ```
 
 - web UI: http://localhost:3000
-- worker metrics: http://localhost:9090
+- worker metrics: http://localhost:9090 (no auth — bind locally only)
 
 ## api
 
-The public REST API is available under `/api/v1`:
+The REST API is available under `/api/v1`:
 
 | endpoint | description |
 |---|---|
-| `GET /api/v1/jobs` | list/search jobs (supports `q`, `company`, `location`, `page`) |
+| `GET /api/v1/jobs` | list/search jobs (supports `q`, `company_slug`, `location_type`, `page`, …) |
 | `GET /api/v1/jobs/:id` | single job detail |
 | `GET /api/v1/companies` | list tracked companies |
 
-API key authentication is required — pass `x-api-key: <key>` in the request header.
+Authentication: `Authorization: Bearer <api_key>`.
+
+Keys are stored as SHA-256 hashes in the `ApiKey` table. There is no minting UI yet — create a user, hash a random key, and insert the row:
+
+```bash
+node -e "const {createHash,randomBytes}=require('crypto'); const raw='rt_'+randomBytes(24).toString('hex'); console.log('key:', raw); console.log('hash:', createHash('sha256').update(raw).digest('hex'))"
+```
+
+Insert `hash` into `ApiKey.key_hash` with a valid `user_id`, then send `key` as the Bearer token.
+
+## responsible use
+
+Default seed data points at ~90 real public career boards. The worker will call those ATS APIs once it starts. Keep the default poll interval, do not run `scripts/discover-companies.ts` unless you intend to probe many company slugs, and review each ATS provider's terms before crawling at scale.
 
 ## license
 
-MIT
+[MIT](./LICENSE)
