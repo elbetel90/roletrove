@@ -12,7 +12,7 @@ interface DedupeInput {
 /**
  * Compute two dedup hashes for a job record.
  *
- * - exact_hash: identifies a unique posting (company + normalized title + location bucket)
+ * - exact_hash: content fingerprint (company + normalized title + location bucket)
  * - role_family_hash: identifies a "role" for cross-posting dedup (company + family + department)
  */
 export function computeHashes(params: DedupeInput): JobHashes {

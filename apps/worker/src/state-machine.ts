@@ -1,4 +1,5 @@
-import { prisma, Prisma } from '@roletrove/db'
+import { prisma } from '@roletrove/db'
+import { fitInt4 } from '@roletrove/ats-adapters'
 import type { JobRecord } from '@roletrove/shared'
 import { logger } from './logger'
 
@@ -13,34 +14,46 @@ export interface UpsertResult {
 
 // ─── Upsert a single normalized job ──────────────────────────────────────────
 
+const jobSelect = {
+  id: true,
+  status: true,
+  source_id: true,
+  description_text: true,
+  tech_stack: true,
+  comp_min: true,
+  comp_max: true,
+  exact_hash: true,
+} as const
+
 /**
- * Insert or update a normalized JobRecord in Postgres using its exact_hash.
+ * Insert or update a normalized JobRecord in Postgres.
+ *
+ * Identity is the ATS posting: (source_id, source_ats, company_id).
+ * exact_hash is a content fingerprint only — it is not unique.
  *
  * State transitions:
- *   exact_hash not in DB               → INSERT, status=active
- *   exact_hash in DB, content unchanged → UPDATE last_seen_at only
- *   exact_hash in DB, content changed   → UPDATE status=updated, write JobSnapshot
- *
- * "Content change" is detected by comparing description_text (normalized text).
+ *   source key not in DB                 → INSERT, status=active
+ *   source key in DB, content unchanged  → UPDATE last_seen_at only
+ *   source key in DB, content changed    → UPDATE status=updated, write JobSnapshot
  */
 export async function upsertJob(
   job: JobRecord,
   company_id: string,
 ): Promise<UpsertResult> {
-  // 1. Look up existing row by exact_hash
+  const sourceKey = {
+    source_id: job.source_id,
+    source_ats: job.source_ats,
+    company_id,
+  }
+
   const existing = await prisma.job.findUnique({
-    where: { exact_hash: job.hashes.exact_hash },
-    select: {
-      id: true,
-      status: true,
-      description_text: true,
-      tech_stack: true,
-      comp_min: true,
-      comp_max: true,
-    },
+    where: { source_id_source_ats_company_id: sourceKey },
+    select: jobSelect,
   })
 
   const now = new Date()
+  const comp_min = fitInt4(job.comp_min)
+  const comp_max = fitInt4(job.comp_max)
 
   if (!existing) {
     // ── New job ────────────────────────────────────────────────────────────────
@@ -71,8 +84,8 @@ export async function upsertJob(
           tech_stack:        job.tech_stack,
           tags:              job.tags,
 
-          comp_min:          job.comp_min,
-          comp_max:          job.comp_max,
+          comp_min,
+          comp_max,
           comp_currency:     job.comp_currency,
           has_equity:        job.has_equity,
 
@@ -93,11 +106,10 @@ export async function upsertJob(
 
       return { outcome: 'new', job_id: created.id }
     } catch (err) {
-      // P2002 = unique constraint — another worker beat us to it (race condition).
-      // Re-fetch and treat as unchanged.
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      // Concurrent insert of the same ATS posting.
+      if (isPrismaUniqueViolation(err)) {
         const race = await prisma.job.findUnique({
-          where: { exact_hash: job.hashes.exact_hash },
+          where: { source_id_source_ats_company_id: sourceKey },
           select: { id: true },
         })
         if (race) {
@@ -109,7 +121,7 @@ export async function upsertJob(
     }
   }
 
-  // ── Existing job — detect content change ────────────────────────────────────
+  // ── Existing job — detect content or identity-field change ──────────────────
   const descriptionChanged =
     existing.description_text !== job.description_text &&
     job.description_text.length > 0
@@ -119,17 +131,17 @@ export async function upsertJob(
     JSON.stringify([...(existing.tech_stack ?? [])].sort())
 
   const compChanged =
-    existing.comp_min !== job.comp_min || existing.comp_max !== job.comp_max
+    existing.comp_min !== comp_min || existing.comp_max !== comp_max
 
-  const contentChanged = descriptionChanged || techChanged || compChanged
+  const hashChanged = existing.exact_hash !== job.hashes.exact_hash
+
+  const contentChanged = descriptionChanged || techChanged || compChanged || hashChanged
 
   if (!contentChanged) {
-    // ── Unchanged — just heartbeat ────────────────────────────────────────────
     await prisma.job.update({
       where: { id: existing.id },
       data: {
         last_seen_at: now,
-        // Re-activate if it had been incorrectly marked closed
         ...(existing.status === 'closed' || existing.status === 'archived'
           ? { status: 'active', closed_at: null }
           : {}),
@@ -143,18 +155,29 @@ export async function upsertJob(
   if (descriptionChanged) diffKeys.push('description_text')
   if (techChanged) diffKeys.push('tech_stack')
   if (compChanged) diffKeys.push('comp_min', 'comp_max')
+  if (hashChanged) diffKeys.push('exact_hash')
 
   await prisma.$transaction([
     prisma.job.update({
       where: { id: existing.id },
       data: {
+        title:             job.title,
+        title_normalized:  job.title_normalized,
+        seniority:         job.seniority,
+        role_family:       job.role_family,
+        location_raw:      job.location.raw,
+        location_type:     job.location.type as any,
+        location_country:  job.location.country,
+        location_region:   job.location.region,
         description_text:  job.description_text,
         description_html:  job.description_html || null,
         tech_stack:        job.tech_stack,
-        comp_min:          job.comp_min,
-        comp_max:          job.comp_max,
+        comp_min,
+        comp_max,
         comp_currency:     job.comp_currency,
         has_equity:        job.has_equity,
+        exact_hash:        job.hashes.exact_hash,
+        role_family_hash:  job.hashes.role_family_hash,
         source_updated_at: job.source_updated_at,
         status:            'updated',
         last_seen_at:      now,
@@ -166,8 +189,8 @@ export async function upsertJob(
         raw_payload: {
           description_text: job.description_text,
           tech_stack:       job.tech_stack,
-          comp_min:         job.comp_min,
-          comp_max:         job.comp_max,
+          comp_min,
+          comp_max,
         },
         diff_keys: diffKeys,
       },
@@ -242,6 +265,15 @@ export async function archiveOldClosedJobs(): Promise<number> {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function isPrismaUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code: unknown }).code === 'P2002'
+  )
+}
 
 function normalizeEmploymentType(
   raw: string,

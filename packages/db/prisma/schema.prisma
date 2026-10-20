@@ -111,7 +111,7 @@ model Job {
   apply_url        String
   source_url       String
 
-  exact_hash       String         @unique
+  exact_hash       String
   role_family_hash String
 
   status           JobStatus      @default(active)
@@ -126,6 +126,7 @@ model Job {
 
   @@unique([source_id, source_ats, company_id])
   @@index([company_id, status])
+  @@index([exact_hash])
   @@index([role_family_hash])
   @@index([status, first_seen_at])
   @@index([source_ats, status])
