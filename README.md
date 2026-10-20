@@ -4,6 +4,8 @@ A self-hosted job aggregation engine that crawls company career pages across mul
 
 This project is pre-1.0. APIs, schema, and crawl behavior can change without a stability guarantee.
 
+![RoleTrove dashboard](docs/images/dashboard.png)
+
 ## what it does
 
 - polls due companies every minute; each company has its own cadence (`poll_interval_hours`, default **4**)
@@ -148,7 +150,7 @@ Default seed data points at ~90 real public career boards. The worker will call 
 
 ## contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Please read the [code of conduct](./CODE_OF_CONDUCT.md) and [security policy](./SECURITY.md).
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Please read the [code of conduct](./CODE_OF_CONDUCT.md) and [security policy](./SECURITY.md). Notable changes are listed in [CHANGELOG.md](./CHANGELOG.md).
 
 ## license
 
