@@ -2,6 +2,8 @@
 
 A self-hosted job aggregation engine that crawls company career pages across multiple ATS platforms and exposes a unified search interface.
 
+This project is pre-1.0. APIs, schema, and crawl behavior can change without a stability guarantee.
+
 ## what it does
 
 - polls due companies every minute; each company has its own cadence (`poll_interval_hours`, default **4**)
@@ -95,10 +97,11 @@ pnpm db:migrate:deploy
 pnpm db:seed        # optional — upserts the built-in company list
 ```
 
-If this database was created earlier with `db:push`, mark the initial migration as already applied instead of re-running it:
+If this database was created earlier with `db:push`, mark applied migrations instead of re-running them:
 
 ```bash
 pnpm --filter @roletrove/db exec prisma migrate resolve --applied 0_init
+pnpm --filter @roletrove/db exec prisma migrate resolve --applied 1_exact_hash_non_unique
 ```
 
 Seed inserts companies (who to crawl), not job postings. Jobs are fetched from each company's public ATS API when the worker runs.
@@ -116,7 +119,8 @@ pnpm dev
 ```
 
 - web UI: http://localhost:3000
-- worker metrics: http://localhost:9090 (no auth — bind locally only)
+- worker metrics: http://127.0.0.1:9090 (bound to localhost; no auth)
+- crawl monitor (`/monitor`) and `/api/crawl-logs` / `/api/stats` require a signed-in session
 
 ## api
 
@@ -130,7 +134,7 @@ The REST API is available under `/api/v1`:
 
 Authentication: `Authorization: Bearer <api_key>`.
 
-Keys are stored as SHA-256 hashes in the `ApiKey` table. There is no minting UI yet — create a user, hash a random key, and insert the row:
+There is no API-key UI yet. Keys are stored as SHA-256 hashes in the `ApiKey` table — create a user, hash a random key, and insert the row:
 
 ```bash
 node -e "const {createHash,randomBytes}=require('crypto'); const raw='rt_'+randomBytes(24).toString('hex'); console.log('key:', raw); console.log('hash:', createHash('sha256').update(raw).digest('hex'))"

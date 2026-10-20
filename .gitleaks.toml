@@ -1,0 +1,19 @@
+title = "RoleTrove"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Build output, dependencies, and documented local placeholders"
+paths = [
+  '''\.next/''',
+  '''node_modules/''',
+  '''\.turbo/''',
+  '''pnpm-lock\.yaml''',
+]
+regexes = [
+  '''devpassword''',
+  '''devtskey''',
+  '''dev-better-auth-secret''',
+  '''devsequinsecretkey''',
+]
