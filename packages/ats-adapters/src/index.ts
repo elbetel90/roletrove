@@ -6,7 +6,7 @@ export { fetchLeverJobs } from './lever'
 export { fetchWorkableJobs, fetchWorkableJobDetail } from './workable'
 export { fetchSmartRecruitersJobs } from './smartrecruiters'
 
-export { parseCompensation, parseLeverSalaryRange } from './compensation'
+export { parseCompensation, parseLeverSalaryRange, fitInt4 } from './compensation'
 export type { ParsedCompensation } from './compensation'
 
 export { normalizeGreenhouse, normalizeAshby, normalizeLever, normalizeSmartRecruiters } from './normalizer'

@@ -12,7 +12,7 @@ import {
   type Seniority,
   type RoleFamily,
 } from '@roletrove/shared'
-import { parseCompensation, parseLeverSalaryRange } from './compensation'
+import { parseCompensation, parseLeverSalaryRange, fitInt4 } from './compensation'
 import type {
   RawGreenhouseJob,
   RawAshbyJob,
@@ -129,8 +129,8 @@ function runPipeline(input: PipelineInput): JobRecord {
     tech_stack,
     tags: input.tags ?? [],
 
-    comp_min: comp.comp_min,
-    comp_max: comp.comp_max,
+    comp_min: fitInt4(comp.comp_min),
+    comp_max: fitInt4(comp.comp_max),
     comp_currency: comp.comp_currency,
     has_equity: comp_from_text.has_equity,
 

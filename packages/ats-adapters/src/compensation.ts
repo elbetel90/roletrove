@@ -38,10 +38,10 @@ function parseAmount(raw: string): number | null {
   const clean = raw.replace(/,/g, '').trim()
 
   const kMatch = clean.match(/^([\d.]+)\s*[kK]$/)
-  if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000)
+  if (kMatch) return fitInt4(parseFloat(kMatch[1]) * 1000)
 
   const mMatch = clean.match(/^([\d.]+)\s*[mM]$/)
-  if (mMatch) return Math.round(parseFloat(mMatch[1]) * 1_000_000)
+  if (mMatch) return fitInt4(parseFloat(mMatch[1]) * 1_000_000)
 
   const plain = parseFloat(clean)
   if (!isNaN(plain) && plain > 0) {
@@ -51,6 +51,16 @@ function parseAmount(raw: string): number | null {
   }
 
   return null
+}
+
+/** Postgres Job.comp_* is INT4. Null out zero, negative, or overflowing values. */
+const INT4_MAX = 2_147_483_647
+
+export function fitInt4(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null
+  const n = Math.round(value)
+  if (n <= 0 || n > INT4_MAX) return null
+  return n
 }
 
 // ─── Salary range patterns ────────────────────────────────────────────────────
@@ -108,8 +118,8 @@ export function parseCompensation(text: string): ParsedCompensation {
       (min !== null && min >= 1_000) || (max !== null && max >= 1_000)
     if (looksLikeSalary) {
       return {
-        comp_min: min,
-        comp_max: max,
+        comp_min: fitInt4(min),
+        comp_max: fitInt4(max),
         comp_currency: currency,
         has_equity,
       }
@@ -122,7 +132,7 @@ export function parseCompensation(text: string): ParsedCompensation {
   )
   if (upToMatch) {
     const max = parseAmount(upToMatch[1])
-    return { comp_min: null, comp_max: max, comp_currency: currency, has_equity }
+    return { comp_min: null, comp_max: fitInt4(max), comp_currency: currency, has_equity }
   }
 
   // Try single value
@@ -154,8 +164,8 @@ export function parseLeverSalaryRange(range: {
   const factor = range.interval === 'per-month' ? 12 : 1
 
   return {
-    comp_min: range.min !== null ? Math.round(range.min * factor) : null,
-    comp_max: range.max !== null ? Math.round(range.max * factor) : null,
+    comp_min: range.min !== null ? fitInt4(range.min * factor) : null,
+    comp_max: range.max !== null ? fitInt4(range.max * factor) : null,
     comp_currency: range.currency?.toUpperCase() ?? null,
   }
 }
