@@ -196,8 +196,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       typesense:
-        specifier: ^1.8.2
-        version: 1.8.2(@babel/runtime@7.29.7)
+        specifier: ^3.1.1
+        version: 3.1.1(@babel/runtime@7.29.7)
     devDependencies:
       '@types/node':
         specifier: ^20.17.6
@@ -1818,8 +1818,8 @@ packages:
   flatted@3.4.4:
     resolution: {integrity: sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q==}
 
-  follow-redirects@1.16.0:
-    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+  follow-redirects@1.16.1:
+    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -2934,9 +2934,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typesense@1.8.2:
-    resolution: {integrity: sha512-aBpePjA99Qvo+OP2pJwMpvga4Jrm1Y2oV5NsrWXBxlqUDNEUCPZBIksPv2Hq0jxQxHhLLyJVbjXjByXsvpCDVA==}
-    engines: {node: '>=18'}
+  typesense@3.1.1:
+    resolution: {integrity: sha512-MbipLTJCebw/AakwFdo06P3/u1gQ0pWCiRjcL0I1bdLqHvtDr8bjP7N18Tfo/PTGIsj2aVr0QGkdv7lOjRBNNw==}
     peerDependencies:
       '@babel/runtime': ^7.23.2
 
@@ -3985,7 +3984,7 @@ snapshots:
 
   axios@1.20.0:
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -4711,7 +4710,7 @@ snapshots:
 
   flatted@3.4.4: {}
 
-  follow-redirects@1.16.0: {}
+  follow-redirects@1.16.1: {}
 
   for-each@0.3.5:
     dependencies:
@@ -5945,11 +5944,12 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  typesense@1.8.2(@babel/runtime@7.29.7):
+  typesense@3.1.1(@babel/runtime@7.29.7):
     dependencies:
       '@babel/runtime': 7.29.7
       axios: 1.20.0
       loglevel: 1.9.2
+      tslib: 2.8.1
     transitivePeerDependencies:
       - debug
       - supports-color
