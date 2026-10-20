@@ -8,6 +8,22 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: roletrove
+          POSTGRES_USER: roletrove
+          POSTGRES_PASSWORD: devpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U roletrove"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://roletrove:devpassword@localhost:5432/roletrove
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +37,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
       - run: pnpm --filter @roletrove/db exec prisma validate
-        env:
-          DATABASE_URL: postgresql://roletrove:devpassword@localhost:5432/roletrove
+      - run: pnpm db:migrate:deploy
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm test
