@@ -13,6 +13,11 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL", "LOG_LEVEL"]
+    },
     "db:generate": {
       "cache": false
     },
