@@ -7,6 +7,7 @@
  * If it returns jobs, we insert the company into the DB.
  */
 import { prisma } from '@roletrove/db'
+import { USER_AGENT } from '@roletrove/ats-adapters'
 
 const CONCURRENCY = 10
 const DELAY_MS = 100 // per-request delay to avoid hammering
@@ -25,7 +26,7 @@ interface ProbeResult {
 async function probeGreenhouse(token: string): Promise<number | null> {
   try {
     const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${token}/jobs?content=false`, {
-      headers: { 'User-Agent': 'JobsAgg/1.0 (company-discovery)' },
+      headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
@@ -37,7 +38,7 @@ async function probeGreenhouse(token: string): Promise<number | null> {
 async function probeAshby(token: string): Promise<number | null> {
   try {
     const res = await fetch(`https://api.ashbyhq.com/posting-api/job-board/${token}`, {
-      headers: { 'User-Agent': 'JobsAgg/1.0 (company-discovery)' },
+      headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
@@ -50,7 +51,7 @@ async function probeAshby(token: string): Promise<number | null> {
 async function probeLever(token: string): Promise<number | null> {
   try {
     const res = await fetch(`https://api.lever.co/v0/postings/${token}?mode=json&limit=1`, {
-      headers: { 'User-Agent': 'JobsAgg/1.0 (company-discovery)' },
+      headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
@@ -64,7 +65,7 @@ async function probeSmartRecruiters(token: string): Promise<number | null> {
     const res = await fetch(
       `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(token)}/postings?limit=1&offset=0`,
       {
-        headers: { 'User-Agent': 'JobsAgg/1.0 (company-discovery)', Accept: 'application/json' },
+        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
         signal: AbortSignal.timeout(8000),
       },
     )
@@ -81,7 +82,7 @@ async function probeWorkable(token: string): Promise<number | null> {
       {
         method: 'POST',
         headers: {
-          'User-Agent': 'JobsAgg/1.0 (company-discovery)',
+          'User-Agent': USER_AGENT,
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },

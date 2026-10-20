@@ -5,8 +5,8 @@ import { Nav } from '@/components/layout/nav'
 
 export const metadata: Metadata = {
   title: {
-    default: 'JobsAgg — Engineering Roles Aggregator',
-    template: '%s | JobsAgg',
+    default: 'RoleTrove — Engineering Roles Aggregator',
+    template: '%s | RoleTrove',
   },
   description:
     'Curated software engineering jobs from Greenhouse, Ashby, Lever, and more. Updated every 4 hours.',

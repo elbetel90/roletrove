@@ -23,7 +23,7 @@ export function Nav() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-gray-900 shrink-0">
             <span className="text-brand-600 text-lg">⚡</span>
-            <span className="text-base tracking-tight">JobsAgg</span>
+            <span className="text-base tracking-tight">RoleTrove</span>
           </Link>
 
           {/* Nav links */}
