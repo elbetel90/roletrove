@@ -6,13 +6,7 @@ import { CompanyChart } from '@/components/dashboard/company-chart'
 import { JobCard } from '@/components/jobs/job-card'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
 import { searchJobs } from '@roletrove/search'
-
-async function getStats() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const r = await fetch(`${baseUrl}/api/stats`, { next: { revalidate: 300 } })
-  if (!r.ok) return null
-  return r.json()
-}
+import { getDashboardStats } from '@/lib/dashboard-stats'
 
 async function getCompanies() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -24,7 +18,7 @@ async function getCompanies() {
 export default async function DashboardPage() {
   // Parallel data fetching — all server-side
   const [statsData, recentResult, companiesData] = await Promise.all([
-    getStats(),
+    getDashboardStats().catch(() => null),
     searchJobs({ sort: 'newest', limit: 8, status: 'active,updated' }).catch(() => null),
     getCompanies(),
   ])

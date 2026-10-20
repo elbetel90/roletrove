@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { prisma } from '@roletrove/db'
+import { auth } from '@/lib/auth'
 import { Badge } from '@/components/ui/badge'
 import { ATS_COLORS, timeAgo, timeRelative, cn } from '@/lib/utils'
 import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react'
@@ -11,6 +14,11 @@ export const metadata: Metadata = { title: 'Crawl Monitor' }
 export const revalidate = 30
 
 export default async function MonitorPage() {
+  const session = await auth.api.getSession({ headers: headers() })
+  if (!session) {
+    redirect('/auth/sign-in')
+  }
+
   // Latest crawl log per company + company info
   const companies = await prisma.company.findMany({
     orderBy: { name: 'asc' },

@@ -11,6 +11,7 @@ import { startR2Drain, stopR2Drain } from './r2-drain'
 import { queueDepth } from './metrics'
 
 const METRICS_PORT = parseInt(process.env.METRICS_PORT ?? '9090', 10)
+const METRICS_HOST = process.env.METRICS_HOST ?? '127.0.0.1'
 
 // ─── Prometheus metrics HTTP server ──────────────────────────────────────────
 // Scraped by Grafana Alloy agent and forwarded to Grafana Cloud.
@@ -37,8 +38,8 @@ const metricsServer = http.createServer(async (req, res) => {
 async function bootstrap(): Promise<void> {
   // 1. Start metrics server
   await new Promise<void>((resolve) => {
-    metricsServer.listen(METRICS_PORT, () => {
-      logger.info({ port: METRICS_PORT }, 'Metrics server listening')
+    metricsServer.listen(METRICS_PORT, METRICS_HOST, () => {
+      logger.info({ host: METRICS_HOST, port: METRICS_PORT }, 'Metrics server listening')
       resolve()
     })
   })

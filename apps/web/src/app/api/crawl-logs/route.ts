@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@roletrove/db'
+import { requireSession } from '@/lib/require-session'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,9 @@ export const runtime = 'nodejs'
  *   errors_only  - true|false — only return entries with errors
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  const { error } = await requireSession()
+  if (error) return error
+
   const sp = req.nextUrl.searchParams
   const companySlug = sp.get('company_slug') ?? undefined
   const errorsOnly  = sp.get('errors_only') === 'true'
