@@ -49,8 +49,8 @@ an individual is officially representing the community in public spaces.
 
 ## enforcement
 
-Report incidents to the maintainers through a private [GitHub security advisory](https://github.com/elbetel90/roletrove/security/advisories/new)
-or by contacting the repository owner on GitHub. All complaints will be reviewed
+Report incidents by contacting the repository owner on GitHub
+([@elbetel90](https://github.com/elbetel90)). All complaints will be reviewed
 and investigated promptly and fairly.
 
 Community leaders are obligated to respect the privacy and security of the
